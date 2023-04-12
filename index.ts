@@ -6,6 +6,11 @@ import { getPkgManager } from "./helpers/get-pkg-manager";
 import prompts from "prompts";
 import { validateNpmName } from "./helpers/validate-pkg";
 import path from "path";
+import fs from "fs";
+import { isFolderEmpty } from "./helpers/is-folder-empty";
+import ciInfo from "ci-info";
+import checkForUpdate from "update-check";
+import { DownloadError, createApp } from "./create-app";
 
 let projectPath: string = "";
 
@@ -191,9 +196,259 @@ async function run(): Promise<void> {
     process.exit(1);
   }
 
+  if (program.example === true) {
+    console.error(
+      "Please provide an example name or url, otherwise remove the example option.",
+    );
+    process.exit(1);
+  }
+
   /**
    * Verify the project dir is empty or doesn't exist
    */
+  const root = path.resolve(resolvedProjectPath);
+  const appName = path.basename(root);
+  const folderExists = fs.existsSync(root);
+  if (folderExists && !isFolderEmpty(root, appName)) {
+    process.exit(1);
+  }
+
+  const example = typeof program.example === "string" && program.example.trim();
+  const preferences = (conf.get("preferences") || {}) as Record<
+    string,
+    boolean | string
+  >;
+  /**
+   * If the user does not provide the necessary flags, prompt them for whether
+   * to use TS or JS.
+   */
+  if (!example) {
+    const defaults: typeof preferences = {
+      typescript: true,
+      eslint: true,
+      tailwind: true,
+      srcDir: false,
+      importAlias: "@/*",
+    };
+    const getPrefOrDefault = (field: string) =>
+      preferences[field] ?? defaults[field];
+
+    if (!program.typescript && !program.javascript) {
+      if (ciInfo.isCI) {
+        // default to JavaScript in CI as we can't prompt to
+        // prevent breaking setup flows
+        program.typescript = false;
+        program.javascript = true;
+      } else {
+        const styledTypeScript = chalk.hex("#007acc")("TypeScript");
+        const { typescript } = await prompts(
+          {
+            type: "toggle",
+            name: "typescript",
+            message: `Would you like to use ${styledTypeScript} with this project?`,
+            initial: getPrefOrDefault("typescript"),
+            active: "Yes",
+            inactive: "No",
+          },
+          {
+            /**
+             * User inputs Ctrl+C or Ctrl+D to exit the prompt. We should close the
+             * process and not write to the file system.
+             */
+            onCancel: () => {
+              console.error("Exiting.");
+              process.exit(1);
+            },
+          },
+        );
+        /**
+         * Depending on the prompt response, set the appropriate program flags.
+         */
+        program.typescript = Boolean(typescript);
+        program.javascript = !Boolean(typescript);
+        preferences.typescript = Boolean(typescript);
+      }
+    }
+
+    if (
+      !process.argv.includes("--eslint") &&
+      !process.argv.includes("--no-eslint")
+    ) {
+      if (ciInfo.isCI) {
+        program.eslint = true;
+      } else {
+        const styledEslint = chalk.hex("#007acc")("ESLint");
+        const { eslint } = await prompts({
+          onState: onPromptState,
+          type: "toggle",
+          name: "eslint",
+          message: `Would you like to use ${styledEslint} with this project?`,
+          initial: getPrefOrDefault("eslint"),
+          active: "Yes",
+          inactive: "No",
+        });
+        program.eslint = Boolean(eslint);
+        preferences.eslint = Boolean(eslint);
+      }
+    }
+
+    if (
+      !process.argv.includes("--tailwind") &&
+      !process.argv.includes("--no-tailwind")
+    ) {
+      if (ciInfo.isCI) {
+        program.tailwind = false;
+      } else {
+        const tw = chalk.hex("#007acc")("Tailwind CSS");
+        const { tailwind } = await prompts({
+          onState: onPromptState,
+          type: "toggle",
+          name: "tailwind",
+          message: `Would you like to use ${tw} with this project?`,
+          initial: getPrefOrDefault("tailwind"),
+          active: "Yes",
+          inactive: "No",
+        });
+        program.tailwind = Boolean(tailwind);
+        preferences.tailwind = Boolean(tailwind);
+      }
+    }
+
+    if (
+      !process.argv.includes("--experimental-app") &&
+      !process.argv.includes("--no-experimental-app")
+    ) {
+      if (ciInfo.isCI) {
+        program.experimentalApp = false;
+      } else {
+        const styledAppDir = chalk.hex("#007acc")(
+          "experimental `app/` directory",
+        );
+        const { appDir } = await prompts({
+          onState: onPromptState,
+          type: "toggle",
+          name: "appDir",
+          message: `Would you like to use ${styledAppDir} with this project?`,
+          initial: false,
+          active: "Yes",
+          inactive: "No",
+        });
+        program.experimentalApp = Boolean(appDir);
+      }
+    }
+
+    if (
+      typeof program.importAlias !== "string" ||
+      !program.importAlias.length
+    ) {
+      if (ciInfo.isCI) {
+        program.importAlias = "@/*";
+      } else {
+        const styledImportAlias = chalk.hex("#007acc")("import alias");
+        const { importAlias } = await prompts({
+          onState: onPromptState,
+          type: "text",
+          name: "importAlias",
+          message: `What ${styledImportAlias} would you like configured?`,
+          initial: getPrefOrDefault("importAlias"),
+          validate: (value) =>
+            /.+\/\*/.test(value)
+              ? true
+              : "Import alias must follow the pattern <prefix>/*",
+        });
+        program.importAlias = importAlias;
+        preferences.importAlias = importAlias;
+      }
+    }
+  }
+
+  try {
+    await createApp({
+      appPath: resolvedProjectPath,
+      packageManager,
+      example: (example && example !== "default" ? example : undefined) as any,
+      examplePath: program.examplePath,
+      typescript: program.typescript,
+      tailwind: program.tailwind,
+      eslint: program.eslint,
+      srcDir: program.srcDir,
+      importAlias: program.importAlias,
+    });
+  } catch (reason) {
+    if (!(reason instanceof DownloadError)) {
+      throw reason;
+    }
+
+    const res = await prompts({
+      onState: onPromptState,
+      type: "confirm",
+      name: "builtin",
+      message:
+        `Could not download "${example}" because of a connectivity issue between your machine and GitHub.\n` +
+        `Do you want to use the default template instead?`,
+      initial: true,
+    });
+    if (!res.builtin) {
+      throw reason;
+    }
+
+    await createApp({
+      appPath: resolvedProjectPath,
+      packageManager,
+      typescript: program.typescript,
+      eslint: program.eslint,
+      tailwind: program.tailwind,
+      experimentalApp: program.experimentalApp,
+      srcDir: program.srcDir,
+      importAlias: program.importAlias,
+    });
+  }
+  conf.set("preferences", preferences as unknown as string);
 }
 
-run();
+const update = checkForUpdate(packageJson).catch(() => null);
+
+async function notifyUpdate(): Promise<void> {
+  try {
+    const res = await update;
+    if (res?.latest) {
+      const updateMessage =
+        packageManager === "yarn"
+          ? "yarn global add create-next-app"
+          : packageManager === "pnpm"
+          ? "pnpm add -g create-next-app"
+          : "npm i -g create-next-app";
+
+      console.log(
+        chalk.yellow.bold("A new version of `create-next-app` is available!") +
+          "\n" +
+          "You can update by running: " +
+          chalk.cyan(updateMessage) +
+          "\n",
+      );
+    }
+    process.exit();
+  } catch {
+    // ignore error
+  }
+}
+
+run()
+  .then(notifyUpdate)
+  .catch(async (reason) => {
+    console.log();
+    console.log("Aborting installation.");
+    if (reason.command) {
+      console.log(`  ${chalk.cyan(reason.command)} has failed.`);
+    } else {
+      console.log(
+        chalk.red("Unexpected error. Please report it as a bug:") + "\n",
+        reason,
+      );
+    }
+    console.log();
+
+    await notifyUpdate();
+
+    process.exit(1);
+  });

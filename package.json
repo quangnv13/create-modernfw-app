@@ -16,6 +16,7 @@
     "next-app": "./dist/index.js"
   },
   "dependencies": {
+    "ci-info": "^3.8.0",
     "validate-npm-package-name": "^5.0.0"
   },
   "devDependencies": {
@@ -27,6 +28,7 @@
     "chalk": "^5.2.0",
     "commander": "2.20.0",
     "prompts": "^2.4.2",
-    "typescript": "^5.0.4"
+    "typescript": "^5.0.4",
+    "update-check": "^1.5.4"
   }
 }
