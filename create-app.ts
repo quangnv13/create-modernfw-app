@@ -1,19 +1,20 @@
-import path from "path";
-import { RepoInfo } from "./helpers/examples";
 import { PackageManager } from "./helpers/get-pkg-manager";
-import { TemplateMode, TemplateType } from "./templates/types";
-import { isWriteable } from "./helpers/is-writeable";
-import { makeDir } from "./helpers/make-dir";
+import { tryGitInit } from "./helpers/git";
 import { isFolderEmpty } from "./helpers/is-folder-empty";
 import { getOnline } from "./helpers/is-online";
-import chalk from "chalk";
+import { isWriteable } from "./helpers/is-writeable";
+import { makeDir } from "./helpers/make-dir";
 import { installTemplate } from "./templates/index";
+import { TemplateMode, TemplateType } from "./templates/types";
+
+import chalk from "chalk";
+import path from "path";
+
 export class DownloadError extends Error {}
 
 export async function createApp({
   appPath,
   packageManager,
-  examplePath,
   typescript,
   tailwind,
   eslint,
@@ -21,13 +22,11 @@ export async function createApp({
 }: {
   appPath: string;
   packageManager: PackageManager;
-  examplePath?: string;
   typescript: boolean;
   tailwind: boolean;
   eslint: boolean;
   importAlias: string;
 }): Promise<void> {
-  let repoInfo: RepoInfo | undefined;
   const mode: TemplateMode = typescript ? "ts" : "js";
   const template: TemplateType = tailwind ? "app-tw" : "app";
 
@@ -52,14 +51,11 @@ export async function createApp({
   const useYarn = packageManager === "yarn";
 
   const isOnline = !useYarn || (await getOnline());
-  const originalDirectory = process.cwd();
 
   console.log(`Creating a new Next.js app in ${chalk.green(root)}.`);
   console.log();
 
   process.chdir(root);
-
-  const packageJsonPath = path.join(root, "package.json");
 
   /**
    * If an example repository is not provided for cloning, proceed
@@ -76,4 +72,11 @@ export async function createApp({
     eslint,
     importAlias,
   });
+
+  if (tryGitInit(root)) {
+    console.log("Initialized a git repository.");
+    console.log();
+  }
+
+  console.log(`${chalk.green("Success!")} Created ${appName} at ${appPath}`);
 }

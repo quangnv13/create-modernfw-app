@@ -9,6 +9,7 @@ import path, { dirname } from "path";
 import { fileURLToPath } from "url";
 import util from "util";
 import os from "os";
+import { install } from "../helpers/install";
 
 const glob = util.promisify(globOrig);
 const __filename = fileURLToPath(import.meta.url);
@@ -175,13 +176,4 @@ export const installTemplate = async ({
   }
 };
 
-function install(
-  root: string,
-  dependencies: string[],
-  installFlags: {
-    packageManager: import("../helpers/get-pkg-manager").PackageManager;
-    isOnline: boolean;
-  },
-) {
-  throw new Error("Function not implemented.");
-}
+export * from "./types";

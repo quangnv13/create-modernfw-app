@@ -275,7 +275,6 @@ async function run(): Promise<void> {
     await createApp({
       appPath: resolvedProjectPath,
       packageManager,
-      examplePath: program.examplePath,
       typescript: program.typescript,
       tailwind: program.tailwind,
       eslint: program.eslint,
