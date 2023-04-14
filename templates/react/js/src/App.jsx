@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import reactLogo from './assets/react.svg';
 import viteLogo from '/vite.svg';
 import './styles/global.css';
@@ -6,14 +6,19 @@ import './App.css';
 
 function App() {
   const [count, setCount] = useState(0);
+  const [count1, setCount2] = useState(0);
+
+  useEffect(() => {
+    if (count === 0) {}
+  }, []);
 
   return (
     <div className='App'>
       <div className='flex justify-center'>
-        <a href='https://vitejs.dev' target='_blank'>
+        <a href='https://vitejs.dev' target='_blank' rel='noreferrer'>
           <img src={viteLogo} className='logo' alt='Vite logo' />
         </a>
-        <a href='https://reactjs.org' target='_blank'>
+        <a href='https://reactjs.org' target='_blank' rel='noreferrer'>
           <img src={reactLogo} className='logo react' alt='React logo' />
         </a>
       </div>

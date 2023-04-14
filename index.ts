@@ -1,4 +1,10 @@
 #!/usr/bin/env node
+import { DownloadError, createApp } from "./create-app";
+import { getPkgManager } from "./helpers/get-pkg-manager";
+import { isFolderEmpty } from "./helpers/is-folder-empty";
+import { validateNpmName } from "./helpers/validate-pkg";
+import packageJson from "./package.json" assert { type: "json" };
+
 import chalk from "chalk";
 import ciInfo from "ci-info";
 import Commander from "commander";
@@ -6,11 +12,6 @@ import fs from "fs";
 import path from "path";
 import prompts from "prompts";
 import checkForUpdate from "update-check";
-import { DownloadError, createApp } from "./create-app";
-import { getPkgManager } from "./helpers/get-pkg-manager";
-import { isFolderEmpty } from "./helpers/is-folder-empty";
-import { validateNpmName } from "./helpers/validate-pkg";
-import packageJson from "./package.json" assert { type: "json" };
 
 let projectPath: string = "";
 

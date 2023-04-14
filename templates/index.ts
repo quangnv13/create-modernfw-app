@@ -1,3 +1,4 @@
+import { install } from "../helpers/install";
 import { GetTemplateFileArgs, InstallTemplateArgs } from "./types";
 
 import { Sema } from "async-sema";
@@ -5,11 +6,10 @@ import chalk from "chalk";
 import cpy from "cpy";
 import fs from "fs";
 import globOrig from "glob";
+import os from "os";
 import path, { dirname } from "path";
 import { fileURLToPath } from "url";
 import util from "util";
-import os from "os";
-import { install } from "../helpers/install";
 
 const glob = util.promisify(globOrig);
 const __filename = fileURLToPath(import.meta.url);
