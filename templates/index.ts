@@ -26,9 +26,8 @@ export const getTemplateFile = ({
   return path.join(__dirname, template, mode, file);
 };
 
-export const SRC_DIR_NAMES = ["app", "pages", "styles"];
-
 export const installTemplate = async ({
+  app,
   appName,
   root,
   packageManager,
@@ -37,6 +36,8 @@ export const installTemplate = async ({
   mode,
   tailwind,
   eslint,
+  lintstaged,
+  docker,
   importAlias,
 }: InstallTemplateArgs) => {
   console.log(chalk.bold(`Using ${packageManager}.`));
@@ -45,26 +46,16 @@ export const installTemplate = async ({
    * Copy the template files to the target directory.
    */
   console.log("\nInitializing project with template:", template, "\n");
-  const templatePath = path.join(__dirname, template, mode);
+  const templatePath = path.join(__dirname, app, template, mode);
 
-  const copySource = ["**"];
+  const copySource = [`${templatePath}/**`];
   if (!eslint) copySource.push("!eslintrc.json");
   if (!tailwind) copySource.push("!tailwind.config.js", "!postcss.config.js");
+  if (!lintstaged) copySource.push("!lintstagedrc.json", "!husky");
+  if (!docker) copySource.push("!**Dockerfile", "!**/.dockerignore");
 
   await cpy(copySource, root, {
     cwd: templatePath,
-    flat: true,
-    rename: (name) => {
-      switch (name) {
-        case "gitignore":
-        case "eslintrc.json": {
-          return ".".concat(name);
-        }
-        default: {
-          return name;
-        }
-      }
-    },
   });
 
   const tsconfigFile = path.join(
@@ -105,7 +96,30 @@ export const installTemplate = async ({
   /**
    * Create a package.json for the new project.
    */
-  const packageJson = {
+  const packageJsonReactApp = {
+    name: appName,
+    version: "0.1.0",
+    private: true,
+    scripts: {
+      start: "react-scripts start",
+      build: "react-scripts build",
+      test: "react-scripts test",
+      eject: "react-scripts eject",
+      ...(lintstaged && {
+        prepare: "husky install",
+      }),
+    },
+    browserslist: {
+      production: [">0.2%", "not dead", "not op_mini all"],
+      development: [
+        "last 1 chrome version",
+        "last 1 firefox version",
+        "last 1 safari version",
+      ],
+    },
+  };
+
+  const packageJsonNextApp = {
     name: appName,
     version: "0.1.0",
     private: true,
@@ -114,8 +128,14 @@ export const installTemplate = async ({
       build: "next build",
       start: "next start",
       lint: "next lint",
+      ...(lintstaged && {
+        prepare: "husky install",
+      }),
     },
   };
+
+  const packageJson =
+    app === "react" ? packageJsonReactApp : packageJsonNextApp;
 
   /**
    * Write it to disk.
@@ -134,7 +154,9 @@ export const installTemplate = async ({
   /**
    * Default dependencies.
    */
-  const dependencies = ["react", "react-dom", "next"];
+  const reactDependencies = ["react", "react-dom", "react-scripts"];
+  const nextDependencies = ["react", "react-dom", "next"];
+  const dependencies = app === "react" ? reactDependencies : nextDependencies;
 
   /**
    * TypeScript projects will have type definitions and other devDependencies.
@@ -156,6 +178,13 @@ export const installTemplate = async ({
   }
 
   /**
+   * Add Lint Staged dependencies.
+   */
+  if (lintstaged) {
+    dependencies.push("husky", "lint-staged");
+  }
+
+  /**
    * Default eslint dependencies.
    */
   if (eslint) {
@@ -164,6 +193,7 @@ export const installTemplate = async ({
   /**
    * Install package.json dependencies if they exist.
    */
+  return;
   if (dependencies.length) {
     console.log();
     console.log("Installing dependencies:");

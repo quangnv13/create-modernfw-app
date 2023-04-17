@@ -5,7 +5,7 @@ import { getOnline } from "./helpers/is-online";
 import { isWriteable } from "./helpers/is-writeable";
 import { makeDir } from "./helpers/make-dir";
 import { installTemplate } from "./templates/index";
-import { TemplateMode, TemplateType } from "./templates/types";
+import { TemplateApp, TemplateMode, TemplateType } from "./templates/types";
 
 import chalk from "chalk";
 import path from "path";
@@ -13,23 +13,28 @@ import path from "path";
 export class DownloadError extends Error {}
 
 export async function createApp({
+  app,
   appPath,
   packageManager,
   typescript,
   tailwind,
   eslint,
+  lintstaged,
+  docker,
   importAlias,
 }: {
+  app: TemplateApp;
   appPath: string;
   packageManager: PackageManager;
   typescript: boolean;
   tailwind: boolean;
   eslint: boolean;
+  lintstaged: boolean;
+  docker: boolean;
   importAlias: string;
 }): Promise<void> {
   const mode: TemplateMode = typescript ? "ts" : "js";
   const template: TemplateType = tailwind ? "app-tw" : "app";
-
   const root = path.resolve(appPath);
 
   if (!(await isWriteable(path.dirname(root)))) {
@@ -62,6 +67,7 @@ export async function createApp({
    * by installing from a template.
    */
   await installTemplate({
+    app,
     appName,
     root,
     template,
@@ -71,6 +77,8 @@ export async function createApp({
     tailwind,
     eslint,
     importAlias,
+    lintstaged,
+    docker,
   });
 
   if (tryGitInit(root)) {

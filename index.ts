@@ -11,6 +11,7 @@ import Commander from "commander";
 import fs from "fs";
 import path from "path";
 import prompts from "prompts";
+import terminalLink from "terminal-link";
 import checkForUpdate from "update-check";
 
 let projectPath: string = "";
@@ -38,6 +39,13 @@ const program = new Commander.Command(packageJson.name)
     projectPath = name;
   })
   .option(
+    "--next, --next",
+    `
+
+  Initialize as a Next project. (default)
+`,
+  )
+  .option(
     "--ts, --typescript",
     `
 
@@ -56,6 +64,20 @@ const program = new Commander.Command(packageJson.name)
     `
 
   Initialize with Tailwind CSS config. (default)
+`,
+  )
+  .option(
+    "--lint-staged",
+    `
+
+Initialize with Lint Staged config. (default)
+`,
+  )
+  .option(
+    "--docker",
+    `
+
+Initialize with Docker config. (default)
 `,
   )
   .option(
@@ -89,17 +111,35 @@ async function run(): Promise<void> {
     return;
   }
 
+  if (!process.argv.includes("--next") && !process.argv.includes("--no-next")) {
+    const app = await prompts({
+      onState: onPromptState,
+      type: "select",
+      name: "value",
+      message: "React or Next ?",
+      choices: [
+        { title: terminalLink("Next", "https://nextjs.org/"), value: "next" },
+        { title: terminalLink("React", "https://react.dev/"), value: "react" },
+      ],
+      initial: 0,
+    });
+
+    program.app = app.value;
+  }
+
   if (typeof projectPath === "string") {
     projectPath = projectPath.trim();
   }
 
   if (!projectPath) {
+    const initialProjectName =
+      program.app === "react" ? "react-app" : "next-app";
     const res = await prompts({
       onState: onPromptState,
       type: "text",
       name: "path",
       message: "What is your project named?",
-      initial: "my-app",
+      initial: initialProjectName,
       validate: (name: string) => {
         const validation = validateNpmName(path.basename(path.resolve(name)));
         if (validation.valid) {
@@ -166,6 +206,8 @@ async function run(): Promise<void> {
     eslint: true,
     tailwind: true,
     importAlias: "@/*",
+    lintstaged: true,
+    docker: true,
   };
   const getPrefOrDefault = (field: string) =>
     preferences[field] ?? defaults[field];
@@ -251,6 +293,42 @@ async function run(): Promise<void> {
     }
   }
 
+  if (
+    !process.argv.includes("--lint-staged") &&
+    !process.argv.includes("--no-lint-staged")
+  ) {
+    const lintStagedStyled = chalk.hex("#007acc")("Lint Staged");
+    const lintStaged = await prompts({
+      onState: onPromptState,
+      type: "toggle",
+      name: "tailwind",
+      message: `Would you like to use ${lintStagedStyled} with this project?`,
+      initial: getPrefOrDefault("lintstaged"),
+      active: "Yes",
+      inactive: "No",
+    });
+    program.lintStaged = Boolean(lintStaged);
+    preferences.lintStaged = Boolean(lintStaged);
+  }
+
+  if (
+    !process.argv.includes("--docker") &&
+    !process.argv.includes("--no-docker")
+  ) {
+    const dockerStyled = chalk.hex("#007acc")("Docker");
+    const { docker } = await prompts({
+      onState: onPromptState,
+      type: "toggle",
+      name: "docker",
+      message: `Would you like to use ${dockerStyled} with this project?`,
+      initial: getPrefOrDefault("docker"),
+      active: "Yes",
+      inactive: "No",
+    });
+    program.docker = Boolean(docker);
+    preferences.docker = Boolean(docker);
+  }
+
   if (typeof program.importAlias !== "string" || !program.importAlias.length) {
     if (ciInfo.isCI) {
       program.importAlias = "@/*";
@@ -274,12 +352,15 @@ async function run(): Promise<void> {
 
   try {
     await createApp({
+      app: program.app,
       appPath: resolvedProjectPath,
       packageManager,
       typescript: program.typescript,
       tailwind: program.tailwind,
       eslint: program.eslint,
       importAlias: program.importAlias,
+      docker: program.docker,
+      lintstaged: program.lintstaged,
     });
   } catch (reason) {
     if (!(reason instanceof DownloadError)) {
@@ -300,12 +381,15 @@ async function run(): Promise<void> {
     }
 
     await createApp({
+      app: program.app,
       appPath: resolvedProjectPath,
       packageManager,
       typescript: program.typescript,
       eslint: program.eslint,
       tailwind: program.tailwind,
       importAlias: program.importAlias,
+      docker: program.docker,
+      lintstaged: program.lintstaged,
     });
   }
   conf.set("preferences", preferences as unknown as string);
