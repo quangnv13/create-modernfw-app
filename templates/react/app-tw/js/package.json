@@ -1,0 +1,24 @@
+{
+  "name": "js",
+  "version": "0.1.0",
+  "private": true,
+  "dependencies": {
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-scripts": "5.0.1"
+  },
+  "scripts": {
+    "start": "react-scripts start",
+    "build": "react-scripts build",
+    "eject": "react-scripts eject",
+    "prepare": "husky install"
+  },
+  "devDependencies": {
+    "autoprefixer": "^10.4.14",
+    "husky": "^8.0.3",
+    "lint-staged": "^13.2.1",
+    "postcss": "^8.4.21",
+    "prettier": "^2.8.7",
+    "tailwindcss": "^3.3.1"
+  }
+}

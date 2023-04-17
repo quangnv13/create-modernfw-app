@@ -6,7 +6,6 @@ import { validateNpmName } from "./helpers/validate-pkg";
 import packageJson from "./package.json" assert { type: "json" };
 
 import chalk from "chalk";
-import ciInfo from "ci-info";
 import Commander from "commander";
 import fs from "fs";
 import path from "path";
@@ -213,84 +212,69 @@ async function run(): Promise<void> {
     preferences[field] ?? defaults[field];
 
   if (!program.typescript && !program.javascript) {
-    if (ciInfo.isCI) {
-      // default to JavaScript in CI as we can't prompt to
-      // prevent breaking setup flows
-      program.typescript = false;
-      program.javascript = true;
-    } else {
-      const styledTypeScript = chalk.hex("#007acc")("TypeScript");
-      const { typescript } = await prompts(
-        {
-          type: "toggle",
-          name: "typescript",
-          message: `Would you like to use ${styledTypeScript} with this project?`,
-          initial: getPrefOrDefault("typescript"),
-          active: "Yes",
-          inactive: "No",
+    const styledTypeScript = chalk.hex("#007acc")("TypeScript");
+    const { typescript } = await prompts(
+      {
+        type: "toggle",
+        name: "typescript",
+        message: `Would you like to use ${styledTypeScript} with this project?`,
+        initial: getPrefOrDefault("typescript"),
+        active: "Yes",
+        inactive: "No",
+      },
+      {
+        /**
+         * User inputs Ctrl+C or Ctrl+D to exit the prompt. We should close the
+         * process and not write to the file system.
+         */
+        onCancel: () => {
+          console.error("Exiting.");
+          process.exit(1);
         },
-        {
-          /**
-           * User inputs Ctrl+C or Ctrl+D to exit the prompt. We should close the
-           * process and not write to the file system.
-           */
-          onCancel: () => {
-            console.error("Exiting.");
-            process.exit(1);
-          },
-        },
-      );
-      /**
-       * Depending on the prompt response, set the appropriate program flags.
-       */
-      program.typescript = Boolean(typescript);
-      program.javascript = !Boolean(typescript);
-      preferences.typescript = Boolean(typescript);
-    }
+      },
+    );
+    /**
+     * Depending on the prompt response, set the appropriate program flags.
+     */
+    program.typescript = Boolean(typescript);
+    program.javascript = !Boolean(typescript);
+    preferences.typescript = Boolean(typescript);
   }
 
   if (
     !process.argv.includes("--eslint") &&
     !process.argv.includes("--no-eslint")
   ) {
-    if (ciInfo.isCI) {
-      program.eslint = true;
-    } else {
-      const styledEslint = chalk.hex("#007acc")("ESLint");
-      const { eslint } = await prompts({
-        onState: onPromptState,
-        type: "toggle",
-        name: "eslint",
-        message: `Would you like to use ${styledEslint} with this project?`,
-        initial: getPrefOrDefault("eslint"),
-        active: "Yes",
-        inactive: "No",
-      });
-      program.eslint = Boolean(eslint);
-      preferences.eslint = Boolean(eslint);
-    }
+    const styledEslint = chalk.hex("#007acc")("ESLint");
+    const { eslint } = await prompts({
+      onState: onPromptState,
+      type: "toggle",
+      name: "eslint",
+      message: `Would you like to use ${styledEslint} with this project?`,
+      initial: getPrefOrDefault("eslint"),
+      active: "Yes",
+      inactive: "No",
+    });
+    program.eslint = Boolean(eslint);
+    preferences.eslint = Boolean(eslint);
   }
 
   if (
     !process.argv.includes("--tailwind") &&
     !process.argv.includes("--no-tailwind")
   ) {
-    if (ciInfo.isCI) {
-      program.tailwind = false;
-    } else {
-      const tw = chalk.hex("#007acc")("Tailwind CSS");
-      const { tailwind } = await prompts({
-        onState: onPromptState,
-        type: "toggle",
-        name: "tailwind",
-        message: `Would you like to use ${tw} with this project?`,
-        initial: getPrefOrDefault("tailwind"),
-        active: "Yes",
-        inactive: "No",
-      });
-      program.tailwind = Boolean(tailwind);
-      preferences.tailwind = Boolean(tailwind);
-    }
+    const tw = chalk.hex("#007acc")("Tailwind CSS");
+    const { tailwind } = await prompts({
+      onState: onPromptState,
+      type: "toggle",
+      name: "tailwind",
+      message: `Would you like to use ${tw} with this project?`,
+      initial: getPrefOrDefault("tailwind"),
+      active: "Yes",
+      inactive: "No",
+    });
+    program.tailwind = Boolean(tailwind);
+    preferences.tailwind = Boolean(tailwind);
   }
 
   if (
@@ -330,24 +314,20 @@ async function run(): Promise<void> {
   }
 
   if (typeof program.importAlias !== "string" || !program.importAlias.length) {
-    if (ciInfo.isCI) {
-      program.importAlias = "@/*";
-    } else {
-      const styledImportAlias = chalk.hex("#007acc")("import alias");
-      const { importAlias } = await prompts({
-        onState: onPromptState,
-        type: "text",
-        name: "importAlias",
-        message: `What ${styledImportAlias} would you like configured?`,
-        initial: getPrefOrDefault("importAlias"),
-        validate: (value) =>
-          /.+\/\*/.test(value)
-            ? true
-            : "Import alias must follow the pattern <prefix>/*",
-      });
-      program.importAlias = importAlias;
-      preferences.importAlias = importAlias;
-    }
+    const styledImportAlias = chalk.hex("#007acc")("import alias");
+    const { importAlias } = await prompts({
+      onState: onPromptState,
+      type: "text",
+      name: "importAlias",
+      message: `What ${styledImportAlias} would you like configured?`,
+      initial: getPrefOrDefault("importAlias"),
+      validate: (value) =>
+        /.+\/\*/.test(value)
+          ? true
+          : "Import alias must follow the pattern <prefix>/*",
+    });
+    program.importAlias = importAlias;
+    preferences.importAlias = importAlias;
   }
 
   try {

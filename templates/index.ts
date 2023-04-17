@@ -48,14 +48,28 @@ export const installTemplate = async ({
   console.log("\nInitializing project with template:", template, "\n");
   const templatePath = path.join(__dirname, app, template, mode);
 
-  const copySource = [`${templatePath}/**`];
-  if (!eslint) copySource.push("!eslintrc.json");
-  if (!tailwind) copySource.push("!tailwind.config.js", "!postcss.config.js");
-  if (!lintstaged) copySource.push("!lintstagedrc.json", "!husky");
-  if (!docker) copySource.push("!**Dockerfile", "!**/.dockerignore");
+  const copySource = [`${templatePath}/**/*`];
+  if (!eslint) copySource.push("!*/{eslintrc}");
+  if (!tailwind) copySource.push("/!**tailwind.config", "/!**postcss.config");
+  if (!lintstaged) copySource.push("/!**lintstagedrc", "/!**husky");
+  if (!docker) copySource.push("/!**Dockerfile", "!/**dockerignore");
 
   await cpy(copySource, root, {
     cwd: templatePath,
+    rename: (name) => {
+      console.log(name);
+      switch (name) {
+        case "gitignore":
+        case "dockerignore":
+        case "lintstagedrc":
+        case "eslintrc": {
+          return ".".concat(name);
+        }
+        default: {
+          return name;
+        }
+      }
+    },
   });
 
   const tsconfigFile = path.join(
