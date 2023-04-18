@@ -45,10 +45,7 @@ export function install(
     let command = packageManager;
     const useYarn = packageManager === "yarn";
 
-    if (
-      (dependencies && dependencies.length) ||
-      (devDependencies && devDependencies.length)
-    ) {
+    if (dependencies && dependencies.length) {
       /**
        * If there are dependencies, run a variation of `{packageManager} add`.
        */
@@ -57,19 +54,19 @@ export function install(
          * Call `yarn add --exact (--offline)? (-D)? ...`.
          */
         args = ["add", "--exact"];
-        devArgs = ["add", "--exact"];
         if (!isOnline) args.push("--offline");
         args.push("--cwd", root);
-        devArgs.push("--cwd", root);
         dependencies && args.push(...dependencies);
-        if (devDependencies && devDependencies.length > 0) {
+        if (devDependencies && devDependencies.length) {
+          devArgs = ["add", "--exact"];
+          devArgs.push("--cwd", root);
           devArgs.push("--dev", ...devDependencies);
         }
       } else {
         args = ["install", "--save-exact"];
-        devArgs = ["install", "--save-exact"];
         dependencies && args.push(...dependencies);
         if (devDependencies && devDependencies.length > 0) {
+          devArgs = ["install", "--save-exact"];
           devArgs.push("--save-dev", ...devDependencies);
         }
       }
@@ -102,26 +99,27 @@ export function install(
      * Spawn the installation process.
      */
 
-    const child = spawn(command, args, {
+    spawn(command, args, {
       stdio: "inherit",
-    });
-
-    const child2 = spawn(command, devArgs, {
-      stdio: "inherit",
-    });
-
-    child.on("close", (code) => {
+    }).on("close", (code) => {
       if (code !== 0) {
-        reject({ command: `${command} ${args.join(" ")}` });
+        reject({ command: `${command} ${devArgs.join(" ")}` });
         return;
-      }
-      child2.on("close", (code) => {
-        if (code !== 0) {
-          reject({ command: `${command} ${devArgs.join(" ")}` });
-          return;
+      } else {
+        if (devArgs.length) {
+          spawn(command, devArgs, {
+            stdio: "inherit",
+          }).on("close", (code) => {
+            if (code !== 0) {
+              reject({ command: `${command} ${devArgs.join(" ")}` });
+              return;
+            }
+            resolve();
+          });
+        } else {
+          resolve();
         }
-        resolve();
-      });
+      }
     });
   });
 }

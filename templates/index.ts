@@ -77,7 +77,7 @@ export const installTemplate = async ({
     mode === "js" ? "jsconfig.json" : "tsconfig.json",
   );
 
-  if (mode === "ts") {
+  if (mode === "ts" && app === "next") {
     await fs.promises.writeFile(
       tsconfigFile,
       (await fs.promises.readFile(tsconfigFile, "utf8"))
