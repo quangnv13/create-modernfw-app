@@ -49,19 +49,19 @@ export const installTemplate = async ({
   const templatePath = path.join(__dirname, app, template, mode);
 
   const copySource = [`${templatePath}/**/*`];
-  if (!eslint) copySource.push("!*/{eslintrc}");
-  if (!tailwind) copySource.push("/!**tailwind.config", "/!**postcss.config");
-  if (!lintstaged) copySource.push("/!**lintstagedrc", "/!**husky");
-  if (!docker) copySource.push("/!**Dockerfile", "!/**dockerignore");
+  if (!eslint) copySource.push("!**/eslintrc.json");
+  if (!tailwind) copySource.push("!**/tailwind.config", "!**/postcss.config");
+  if (!lintstaged) copySource.push("!**/lintstagedrc.json", "!**/huskyrc.json");
+  if (!docker) copySource.push("!**/Dockerfile", "!**/dockerignore");
 
   await cpy(copySource, root, {
     cwd: templatePath,
     rename: (name) => {
-      console.log(name);
       switch (name) {
         case "gitignore":
         case "dockerignore":
         case "lintstagedrc":
+        case "huskyrc":
         case "eslintrc": {
           return ".".concat(name);
         }
@@ -77,34 +77,36 @@ export const installTemplate = async ({
     mode === "js" ? "jsconfig.json" : "tsconfig.json",
   );
 
-  await fs.promises.writeFile(
-    tsconfigFile,
-    (await fs.promises.readFile(tsconfigFile, "utf8"))
-      .replace(`"@/*": ["./*"]`, `"@/*": ["./src/*"]`)
-      .replace(`"@/*":`, `"${importAlias}":`),
-  );
-
-  // update import alias in any files if not using the default
-  if (importAlias !== "@/*") {
-    const files = (await glob("**/*", { cwd: root, dot: true })) as string[];
-    const writeSema = new Sema(8, { capacity: files.length });
-    await Promise.all(
-      files.map(async (file) => {
-        // We don't want to modify compiler options in [ts/js]config.json
-        if (file === "tsconfig.json" || file === "jsconfig.json") return;
-        await writeSema.acquire();
-        const filePath = path.join(root, file);
-        if ((await fs.promises.stat(filePath)).isFile()) {
-          await fs.promises.writeFile(
-            filePath,
-            (
-              await fs.promises.readFile(filePath, "utf8")
-            ).replace(`@/`, `${importAlias.replace(/\*/g, "")}`),
-          );
-        }
-        await writeSema.release();
-      }),
+  if (mode === "ts") {
+    await fs.promises.writeFile(
+      tsconfigFile,
+      (await fs.promises.readFile(tsconfigFile, "utf8"))
+        .replace(`"@/*": ["./*"]`, `"@/*": ["./src/*"]`)
+        .replace(`"@/*":`, `"${importAlias}":`),
     );
+
+    // update import alias in any files if not using the default
+    if (importAlias && importAlias !== "@/*") {
+      const files = (await glob("**/*", { cwd: root, dot: true })) as string[];
+      const writeSema = new Sema(8, { capacity: files.length });
+      await Promise.all(
+        files.map(async (file) => {
+          // We don't want to modify compiler options in [ts/js]config.json
+          if (file === "tsconfig.json" || file === "jsconfig.json") return;
+          await writeSema.acquire();
+          const filePath = path.join(root, file);
+          if ((await fs.promises.stat(filePath)).isFile()) {
+            await fs.promises.writeFile(
+              filePath,
+              (
+                await fs.promises.readFile(filePath, "utf8")
+              ).replace(`@/`, `${importAlias.replace(/\*/g, "")}`),
+            );
+          }
+          await writeSema.release();
+        }),
+      );
+    }
   }
 
   /**
@@ -120,7 +122,7 @@ export const installTemplate = async ({
       test: "react-scripts test",
       eject: "react-scripts eject",
       ...(lintstaged && {
-        prepare: "husky install",
+        precommit: "husky run pre-commit",
       }),
     },
     browserslist: {
@@ -143,7 +145,7 @@ export const installTemplate = async ({
       start: "next start",
       lint: "next lint",
       ...(lintstaged && {
-        prepare: "husky install",
+        precommit: "husky run pre-commit",
       }),
     },
   };
@@ -170,13 +172,18 @@ export const installTemplate = async ({
    */
   const reactDependencies = ["react", "react-dom", "react-scripts"];
   const nextDependencies = ["react", "react-dom", "next"];
+  const reactDevDependencies: string[] = [];
+  const nextDevDependencies: string[] = [];
+
   const dependencies = app === "react" ? reactDependencies : nextDependencies;
+  const devDependencies =
+    app === "react" ? reactDevDependencies : nextDevDependencies;
 
   /**
    * TypeScript projects will have type definitions and other devDependencies.
    */
   if (mode === "ts") {
-    dependencies.push(
+    devDependencies.push(
       "typescript",
       "@types/react",
       "@types/node",
@@ -188,35 +195,36 @@ export const installTemplate = async ({
    * Add Tailwind CSS dependencies.
    */
   if (tailwind) {
-    dependencies.push("tailwindcss", "postcss", "autoprefixer");
+    devDependencies.push("tailwindcss", "postcss", "autoprefixer");
   }
 
   /**
    * Add Lint Staged dependencies.
    */
   if (lintstaged) {
-    dependencies.push("husky", "lint-staged");
+    devDependencies.push("husky", "lint-staged");
   }
 
   /**
    * Default eslint dependencies.
    */
-  if (eslint) {
-    dependencies.push("eslint", "eslint-config-next");
+  if (eslint && app === "next") {
+    devDependencies.push("eslint", "eslint-config-next");
   }
+
   /**
    * Install package.json dependencies if they exist.
    */
-  return;
-  if (dependencies.length) {
+  const mergeDependencies = [...dependencies, ...devDependencies];
+  if (mergeDependencies.length) {
     console.log();
     console.log("Installing dependencies:");
-    for (const dependency of dependencies) {
+    for (const dependency of mergeDependencies) {
       console.log(`- ${chalk.cyan(dependency)}`);
     }
     console.log();
 
-    await install(root, dependencies, installFlags);
+    await install(root, dependencies, devDependencies, installFlags);
   }
 };
 

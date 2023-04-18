@@ -15,7 +15,6 @@ interface InstallArgs {
   /**
    * Indicate whether the given dependencies are devDependencies.
    */
-  devDependencies?: boolean;
 }
 
 /**
@@ -26,7 +25,8 @@ interface InstallArgs {
 export function install(
   root: string,
   dependencies: string[] | null,
-  { packageManager, isOnline, devDependencies }: InstallArgs,
+  devDependencies: string[] | null,
+  { packageManager, isOnline }: InstallArgs,
 ): Promise<void> {
   /**
    * (p)npm-specific command-line flags.
@@ -41,10 +41,14 @@ export function install(
    */
   return new Promise((resolve, reject) => {
     let args: string[];
+    let devArgs: string[] = [];
     let command = packageManager;
     const useYarn = packageManager === "yarn";
 
-    if (dependencies && dependencies.length) {
+    if (
+      (dependencies && dependencies.length) ||
+      (devDependencies && devDependencies.length)
+    ) {
       /**
        * If there are dependencies, run a variation of `{packageManager} add`.
        */
@@ -53,17 +57,21 @@ export function install(
          * Call `yarn add --exact (--offline)? (-D)? ...`.
          */
         args = ["add", "--exact"];
+        devArgs = ["add", "--exact"];
         if (!isOnline) args.push("--offline");
         args.push("--cwd", root);
-        if (devDependencies) args.push("--dev");
-        args.push(...dependencies);
+        devArgs.push("--cwd", root);
+        dependencies && args.push(...dependencies);
+        if (devDependencies && devDependencies.length > 0) {
+          devArgs.push("--dev", ...devDependencies);
+        }
       } else {
-        /**
-         * Call `(p)npm install [--save|--save-dev] ...`.
-         */
         args = ["install", "--save-exact"];
-        args.push(devDependencies ? "--save-dev" : "--save");
-        args.push(...dependencies);
+        devArgs = ["install", "--save-exact"];
+        dependencies && args.push(...dependencies);
+        if (devDependencies && devDependencies.length > 0) {
+          devArgs.push("--save-dev", ...devDependencies);
+        }
       }
     } else {
       /**
@@ -93,23 +101,27 @@ export function install(
     /**
      * Spawn the installation process.
      */
+
     const child = spawn(command, args, {
       stdio: "inherit",
-      env: {
-        ...process.env,
-        ADBLOCK: "1",
-        // we set NODE_ENV to development as pnpm skips dev
-        // dependencies when production
-        NODE_ENV: "development",
-        DISABLE_OPENCOLLECTIVE: "1",
-      },
     });
+
+    const child2 = spawn(command, devArgs, {
+      stdio: "inherit",
+    });
+
     child.on("close", (code) => {
       if (code !== 0) {
         reject({ command: `${command} ${args.join(" ")}` });
         return;
       }
-      resolve();
+      child2.on("close", (code) => {
+        if (code !== 0) {
+          reject({ command: `${command} ${devArgs.join(" ")}` });
+          return;
+        }
+        resolve();
+      });
     });
   });
 }

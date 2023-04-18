@@ -62,10 +62,6 @@ export async function createApp({
 
   process.chdir(root);
 
-  /**
-   * If an example repository is not provided for cloning, proceed
-   * by installing from a template.
-   */
   await installTemplate({
     app,
     appName,

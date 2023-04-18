@@ -282,17 +282,17 @@ async function run(): Promise<void> {
     !process.argv.includes("--no-lint-staged")
   ) {
     const lintStagedStyled = chalk.hex("#007acc")("Lint Staged");
-    const lintStaged = await prompts({
+    const { lintstaged } = await prompts({
       onState: onPromptState,
       type: "toggle",
-      name: "tailwind",
+      name: "lintstaged",
       message: `Would you like to use ${lintStagedStyled} with this project?`,
       initial: getPrefOrDefault("lintstaged"),
       active: "Yes",
       inactive: "No",
     });
-    program.lintStaged = Boolean(lintStaged);
-    preferences.lintStaged = Boolean(lintStaged);
+    program.lintstaged = Boolean(lintstaged);
+    preferences.lintstaged = Boolean(lintstaged);
   }
 
   if (
@@ -313,7 +313,10 @@ async function run(): Promise<void> {
     preferences.docker = Boolean(docker);
   }
 
-  if (typeof program.importAlias !== "string" || !program.importAlias.length) {
+  if (
+    program.typescript &&
+    (typeof program.importAlias !== "string" || !program.importAlias.length)
+  ) {
     const styledImportAlias = chalk.hex("#007acc")("import alias");
     const { importAlias } = await prompts({
       onState: onPromptState,
