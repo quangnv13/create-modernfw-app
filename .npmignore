@@ -4,3 +4,5 @@
 # Except the 'dist' folder and its contents
 !dist/*
 !package.json
+
+./templates
