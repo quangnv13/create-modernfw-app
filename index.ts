@@ -314,7 +314,8 @@ async function run(): Promise<void> {
   }
 
   if (
-    program.typescript && program.app === "next" &&
+    program.typescript &&
+    program.app === "next" &&
     (typeof program.importAlias !== "string" || !program.importAlias.length)
   ) {
     const styledImportAlias = chalk.hex("#007acc")("import alias");

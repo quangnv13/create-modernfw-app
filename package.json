@@ -1,19 +1,17 @@
 {
-  "name": "create-react-app",
+  "name": "modernfw-app",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
   "type": "module",
   "scripts": {
     "build": "ncc build ./index.ts -w -o dist/",
-    "dev": "node --watch ./dist/index.js",
-    "start": "npx next-app",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "dev": "node --watch ./dist/index.js"
   },
   "author": "",
   "license": "ISC",
   "bin": {
-    "next-app": "./dist/index.js"
+    "create-modernfw-app": "./dist/index.js"
   },
   "dependencies": {
     "async-sema": "^3.1.1",

@@ -57,7 +57,7 @@ export async function createApp({
 
   const isOnline = !useYarn || (await getOnline());
 
-  console.log(`Creating a new Next.js app in ${chalk.green(root)}.`);
+  console.log(`Creating a new ${app} app in ${chalk.green(root)}.`);
   console.log();
 
   process.chdir(root);
