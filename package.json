@@ -1,6 +1,6 @@
 {
-  "name": "modernfw-app",
-  "version": "1.0.19",
+  "name": "create-modernfw-app",
+  "version": "1.0.20",
   "description": "",
   "main": "index.js",
   "type": "module",
