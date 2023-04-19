@@ -5,7 +5,7 @@
   "main": "index.js",
   "type": "module",
   "scripts": {
-    "build": "ncc build ./index.ts -w -o dist/",
+    "build": "ncc build ./index.ts -w -o dist/ -m",
     "dev": "node --watch ./dist/index.js"
   },
   "author": "",
