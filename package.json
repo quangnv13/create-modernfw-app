@@ -1,11 +1,11 @@
 {
   "name": "modernfw-app",
-  "version": "1.0.13",
+  "version": "1.0.15",
   "description": "",
   "main": "index.js",
   "type": "module",
   "scripts": {
-    "build": "ncc build ./index.ts -w -o dist/",
+    "build": "ncc build ./index.ts -w -o dist/ -m",
     "dev": "node --watch ./dist/index.js"
   },
   "author": "",
