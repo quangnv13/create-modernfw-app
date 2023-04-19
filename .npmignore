@@ -2,5 +2,5 @@
 *
 
 # Except the 'dist' folder and its contents
-!dist/
+!dist/*
 !package.json
