@@ -66,7 +66,7 @@ export const installTemplate = async ({
           return ".".concat(name);
         }
         case "README-template": {
-          return "README.md";
+          return "README";
         }
         default: {
           return name;
