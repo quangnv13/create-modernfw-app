@@ -2,9 +2,9 @@
 *
 
 # Except the 'dist' folder and its contents
+!dist/
 !dist/**
-!package.json
 
 # Exclude the 'templates' folder outside of 'dist'
-templates/
-
+templates/*
+!dist/templates/

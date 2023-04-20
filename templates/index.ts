@@ -65,7 +65,7 @@ export const installTemplate = async ({
         case "eslintrc": {
           return ".".concat(name);
         }
-        case "README-template.md": {
+        case "README-template": {
           return "README.md";
         }
         default: {
