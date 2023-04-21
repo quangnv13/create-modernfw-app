@@ -7,11 +7,7 @@ This is a command-line interface (CLI) tool that generates a modern Next.js/Reac
 To install create-modernfw-app, you can use npx or npm:
 
 ```bash
-npx create-modernfw-app@latest
-# or
-yarn create create-modernfw-app
-# or
-pnpm create create-modernfw-app
+npx create-modernfw-app
 ```
 
 You will be asked for the name of your project, and then whether you want to

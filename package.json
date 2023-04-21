@@ -1,6 +1,6 @@
 {
   "name": "create-modernfw-app",
-  "version": "1.2.3",
+  "version": "1.2.5",
   "description": "Create Modernfw App is a command-line interface (CLI) tool that generates a modern Next.js/React application with JavaScript/TypeScript, and provides additional options such as Tailwind CSS, ESLint, Docker, Lint-staged, and import aliases.",
   "main": "index.js",
   "type": "module",
@@ -35,7 +35,7 @@
   "devDependencies": {
     "@types/cross-spawn": "6.0.0",
     "@types/glob": "7.1.1",
-    "@types/node": "18.15.13",
+    "@types/node": "^12.6.8",
     "@types/prompts": "2.0.1",
     "@types/rimraf": "3.0.0",
     "@types/validate-npm-package-name": "3.0.0",
@@ -52,5 +52,8 @@
     "typescript": "5.0.4",
     "update-check": "1.5.4",
     "validate-npm-package-name": "5.0.0"
+  },
+  "engines": {
+    "node": ">=14.18.0"
   }
 }
