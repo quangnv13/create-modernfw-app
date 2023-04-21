@@ -55,7 +55,7 @@ Options:
   --lint-staged  , --ls
 
     Include Lint-staged in your project.
-  
+
   --import-alias  , --ia
 
     Include Import Alias in your project.
@@ -74,4 +74,3 @@ Create Modernfw App saves you time and effort by providing a modern boilerplate 
 - **Maintainable code**: Create Modernfw App provides best practices and coding standards to ensure your code is clean, organized, and maintainable.
 
 By using Create Modernfw App, you can focus on writing code that matters, rather than wasting time setting up your project from scratch.
-

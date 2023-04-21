@@ -13,6 +13,25 @@
   "bin": {
     "create-modernfw-app": "./dist/index.js"
   },
+  "keywords": [
+    "Next.js",
+    "React",
+    "CLI",
+    "Boilerplate",
+    "JavaScript",
+    "TypeScript",
+    "Tailwind CSS",
+    "ESLint",
+    "Docker",
+    "Lint-staged",
+    "Import Alias",
+    "Code Generator",
+    "Development Workflow",
+    "Web Development",
+    "Modern Web Development",
+    "Front-end Development",
+    "Open Source"
+  ],
   "dependencies": {
     "async-sema": "^3.1.1",
     "glob": "8.0.3",

@@ -103,13 +103,6 @@ const packageManager = !!program.useNpm
   : getPkgManager();
 
 async function run(): Promise<void> {
-  const conf = new Map([["projectName", "create-next-app"]]);
-  if (program.resetPreferences) {
-    conf.clear();
-    console.log(`Preferences reset successfully`);
-    return;
-  }
-
   if (!process.argv.includes("--next")) {
     const app = await prompts({
       onState: onPromptState,
@@ -192,10 +185,7 @@ async function run(): Promise<void> {
     process.exit(1);
   }
 
-  const preferences = (conf.get("preferences") || {}) as Record<
-    string,
-    boolean | string
-  >;
+  const preferences = {} as Record<string, boolean | string>;
   /**
    * If the user does not provide the necessary flags, prompt them for whether
    * to use TS or JS.
@@ -208,8 +198,7 @@ async function run(): Promise<void> {
     lintstaged: true,
     docker: true,
   };
-  const getPrefOrDefault = (field: string) =>
-    preferences[field] ?? defaults[field];
+  const getPrefOrDefault = (field: string) => defaults[field];
 
   if (!program.typescript && !program.javascript) {
     const styledTypeScript = chalk.hex("#007acc")("TypeScript");
@@ -238,13 +227,9 @@ async function run(): Promise<void> {
      */
     program.typescript = Boolean(typescript);
     program.javascript = !Boolean(typescript);
-    preferences.typescript = Boolean(typescript);
   }
 
-  if (
-    !process.argv.includes("--eslint") &&
-    !process.argv.includes("--es")
-  ) {
+  if (!process.argv.includes("--eslint") && !process.argv.includes("--es")) {
     const styledEslint = chalk.hex("#007acc")("ESLint");
     const { eslint } = await prompts({
       onState: onPromptState,
@@ -256,13 +241,9 @@ async function run(): Promise<void> {
       inactive: "No",
     });
     program.eslint = Boolean(eslint);
-    preferences.eslint = Boolean(eslint);
   }
 
-  if (
-    !process.argv.includes("--tailwind") &&
-    !process.argv.includes("--tw")
-  ) {
+  if (!process.argv.includes("--tailwind") && !process.argv.includes("--tw")) {
     const tw = chalk.hex("#007acc")("Tailwind CSS");
     const { tailwind } = await prompts({
       onState: onPromptState,
@@ -274,7 +255,6 @@ async function run(): Promise<void> {
       inactive: "No",
     });
     program.tailwind = Boolean(tailwind);
-    preferences.tailwind = Boolean(tailwind);
   }
 
   if (
@@ -292,13 +272,9 @@ async function run(): Promise<void> {
       inactive: "No",
     });
     program.lintstaged = Boolean(lintstaged);
-    preferences.lintstaged = Boolean(lintstaged);
   }
 
-  if (
-    !process.argv.includes("--docker") &&
-    !process.argv.includes("--d")
-  ) {
+  if (!process.argv.includes("--docker") && !process.argv.includes("--d")) {
     const dockerStyled = chalk.hex("#007acc")("Docker");
     const { docker } = await prompts({
       onState: onPromptState,
@@ -310,7 +286,6 @@ async function run(): Promise<void> {
       inactive: "No",
     });
     program.docker = Boolean(docker);
-    preferences.docker = Boolean(docker);
   }
 
   if (
@@ -331,7 +306,6 @@ async function run(): Promise<void> {
           : "Import alias must follow the pattern <prefix>/*",
     });
     program.importAlias = importAlias;
-    preferences.importAlias = importAlias;
   }
 
   try {
@@ -376,7 +350,6 @@ async function run(): Promise<void> {
       lintstaged: program.lintstaged,
     });
   }
-  conf.set("preferences", preferences as unknown as string);
 }
 
 const update = checkForUpdate(packageJson).catch(() => null);
@@ -393,7 +366,9 @@ async function notifyUpdate(): Promise<void> {
           : "npm i -g create-modernfw-app";
 
       console.log(
-        chalk.yellow.bold("A new version of `create-modernfw-app` is available!") +
+        chalk.yellow.bold(
+          "A new version of `create-modernfw-app` is available!",
+        ) +
           "\n" +
           "You can update by running: " +
           chalk.cyan(updateMessage) +
