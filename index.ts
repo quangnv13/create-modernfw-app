@@ -41,7 +41,7 @@ const program = new Commander.Command(packageJson.name)
     "--next, --next",
     `
 
-  Initialize as a Next project. (default)
+  Initialize as a Next project.
 `,
   )
   .option(
@@ -59,35 +59,35 @@ const program = new Commander.Command(packageJson.name)
 `,
   )
   .option(
-    "--tailwind",
+    "--tw, --tailwind",
     `
 
   Initialize with Tailwind CSS config. (default)
 `,
   )
   .option(
-    "--lint-staged",
+    "--ls, --lint-staged",
     `
 
 Initialize with Lint Staged config. (default)
 `,
   )
   .option(
-    "--docker",
+    "--d, --docker",
     `
 
 Initialize with Docker config. (default)
 `,
   )
   .option(
-    "--eslint",
+    "--es, --eslint",
     `
 
-  Initialize with eslint config.
+  Initialize with Eslint config.
 `,
   )
   .option(
-    "--import-alias <alias-to-configure>",
+    "--ia, --import-alias <alias-to-configure>",
     `
 
   Specify import alias to use (default "@/*").
@@ -110,7 +110,7 @@ async function run(): Promise<void> {
     return;
   }
 
-  if (!process.argv.includes("--next") && !process.argv.includes("--no-next")) {
+  if (!process.argv.includes("--next")) {
     const app = await prompts({
       onState: onPromptState,
       type: "select",
@@ -243,7 +243,7 @@ async function run(): Promise<void> {
 
   if (
     !process.argv.includes("--eslint") &&
-    !process.argv.includes("--no-eslint")
+    !process.argv.includes("--es")
   ) {
     const styledEslint = chalk.hex("#007acc")("ESLint");
     const { eslint } = await prompts({
@@ -261,7 +261,7 @@ async function run(): Promise<void> {
 
   if (
     !process.argv.includes("--tailwind") &&
-    !process.argv.includes("--no-tailwind")
+    !process.argv.includes("--tw")
   ) {
     const tw = chalk.hex("#007acc")("Tailwind CSS");
     const { tailwind } = await prompts({
@@ -279,7 +279,7 @@ async function run(): Promise<void> {
 
   if (
     !process.argv.includes("--lint-staged") &&
-    !process.argv.includes("--no-lint-staged")
+    !process.argv.includes("--ls")
   ) {
     const lintStagedStyled = chalk.hex("#007acc")("Lint Staged");
     const { lintstaged } = await prompts({
@@ -297,7 +297,7 @@ async function run(): Promise<void> {
 
   if (
     !process.argv.includes("--docker") &&
-    !process.argv.includes("--no-docker")
+    !process.argv.includes("--d")
   ) {
     const dockerStyled = chalk.hex("#007acc")("Docker");
     const { docker } = await prompts({
@@ -387,13 +387,13 @@ async function notifyUpdate(): Promise<void> {
     if (res?.latest) {
       const updateMessage =
         packageManager === "yarn"
-          ? "yarn global add create-next-app"
+          ? "yarn global add create-modernfw-app"
           : packageManager === "pnpm"
-          ? "pnpm add -g create-next-app"
-          : "npm i -g create-next-app";
+          ? "pnpm add -g create-modernfw-app"
+          : "npm i -g create-modernfw-app";
 
       console.log(
-        chalk.yellow.bold("A new version of `create-next-app` is available!") +
+        chalk.yellow.bold("A new version of `create-modernfw-app` is available!") +
           "\n" +
           "You can update by running: " +
           chalk.cyan(updateMessage) +
