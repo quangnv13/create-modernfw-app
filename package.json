@@ -1,6 +1,6 @@
 {
   "name": "create-modernfw-app",
-  "version": "1.2.1",
+  "version": "1.2.2",
   "description": "Create Modernfw App is a command-line interface (CLI) tool that generates a modern Next.js/React application with JavaScript/TypeScript, and provides additional options such as Tailwind CSS, ESLint, Docker, Lint-staged, and import aliases.",
   "main": "index.js",
   "type": "module",
@@ -32,27 +32,25 @@
     "Front-end Development",
     "Open Source"
   ],
-  "dependencies": {
-    "async-sema": "^3.1.1",
-    "glob": "8.0.3",
-    "rimraf": "^5.0.0",
-    "terminal-link": "^3.0.0",
-    "validate-npm-package-name": "^5.0.0"
-  },
   "devDependencies": {
-    "@types/cross-spawn": "^6.0.2",
-    "@types/glob": "^8.1.0",
-    "@types/node": "^18.15.11",
-    "@types/prompts": "^2.4.4",
-    "@types/validate-npm-package-name": "^4.0.0",
-    "@vercel/ncc": "^0.36.1",
-    "async-retry": "^1.3.3",
-    "chalk": "^5.2.0",
+    "@types/cross-spawn": "6.0.0",
+    "@types/glob": "7.1.1",
+    "@types/node": "16.16.0",
+    "@types/prompts": "2.0.1",
+    "@types/rimraf": "3.0.0",
+    "@types/validate-npm-package-name": "3.0.0",
+    "@vercel/ncc": "0.34.0",
+    "async-sema": "3.1.1",
+    "chalk": "2.4.2",
     "commander": "2.20.0",
     "cpy": "9.0.1",
-    "cross-spawn": "^7.0.3",
-    "prompts": "^2.4.2",
-    "typescript": "^5.0.4",
-    "update-check": "^1.5.4"
+    "cross-spawn": "6.0.5",
+    "glob": "8.0.3",
+    "prompts": "2.1.0",
+    "rimraf": "3.0.0",
+    "terminal-link": "3.0.0",
+    "typescript": "5.0.4",
+    "update-check": "1.5.4",
+    "validate-npm-package-name": "5.0.0"
   }
 }
