@@ -41,7 +41,7 @@ const program = new Commander.Command(packageJson.name)
     "--next, --next",
     `
 
-  Initialize as a Next project. (default)
+  Initialize as a Next project.
 `,
   )
   .option(
@@ -59,35 +59,35 @@ const program = new Commander.Command(packageJson.name)
 `,
   )
   .option(
-    "--tailwind",
+    "--tw, --tailwind",
     `
 
   Initialize with Tailwind CSS config. (default)
 `,
   )
   .option(
-    "--lint-staged",
+    "--ls, --lint-staged",
     `
 
 Initialize with Lint Staged config. (default)
 `,
   )
   .option(
-    "--docker",
+    "--d, --docker",
     `
 
 Initialize with Docker config. (default)
 `,
   )
   .option(
-    "--eslint",
+    "--es, --eslint",
     `
 
-  Initialize with eslint config.
+  Initialize with Eslint config.
 `,
   )
   .option(
-    "--import-alias <alias-to-configure>",
+    "--ia, --import-alias <alias-to-configure>",
     `
 
   Specify import alias to use (default "@/*").
@@ -103,14 +103,7 @@ const packageManager = !!program.useNpm
   : getPkgManager();
 
 async function run(): Promise<void> {
-  const conf = new Map([["projectName", "create-next-app"]]);
-  if (program.resetPreferences) {
-    conf.clear();
-    console.log(`Preferences reset successfully`);
-    return;
-  }
-
-  if (!process.argv.includes("--next") && !process.argv.includes("--no-next")) {
+  if (!process.argv.includes("--next")) {
     const app = await prompts({
       onState: onPromptState,
       type: "select",
@@ -192,10 +185,7 @@ async function run(): Promise<void> {
     process.exit(1);
   }
 
-  const preferences = (conf.get("preferences") || {}) as Record<
-    string,
-    boolean | string
-  >;
+  const preferences = {} as Record<string, boolean | string>;
   /**
    * If the user does not provide the necessary flags, prompt them for whether
    * to use TS or JS.
@@ -208,8 +198,7 @@ async function run(): Promise<void> {
     lintstaged: true,
     docker: true,
   };
-  const getPrefOrDefault = (field: string) =>
-    preferences[field] ?? defaults[field];
+  const getPrefOrDefault = (field: string) => defaults[field];
 
   if (!program.typescript && !program.javascript) {
     const styledTypeScript = chalk.hex("#007acc")("TypeScript");
@@ -238,13 +227,9 @@ async function run(): Promise<void> {
      */
     program.typescript = Boolean(typescript);
     program.javascript = !Boolean(typescript);
-    preferences.typescript = Boolean(typescript);
   }
 
-  if (
-    !process.argv.includes("--eslint") &&
-    !process.argv.includes("--no-eslint")
-  ) {
+  if (!process.argv.includes("--eslint") && !process.argv.includes("--es")) {
     const styledEslint = chalk.hex("#007acc")("ESLint");
     const { eslint } = await prompts({
       onState: onPromptState,
@@ -256,13 +241,9 @@ async function run(): Promise<void> {
       inactive: "No",
     });
     program.eslint = Boolean(eslint);
-    preferences.eslint = Boolean(eslint);
   }
 
-  if (
-    !process.argv.includes("--tailwind") &&
-    !process.argv.includes("--no-tailwind")
-  ) {
+  if (!process.argv.includes("--tailwind") && !process.argv.includes("--tw")) {
     const tw = chalk.hex("#007acc")("Tailwind CSS");
     const { tailwind } = await prompts({
       onState: onPromptState,
@@ -274,12 +255,11 @@ async function run(): Promise<void> {
       inactive: "No",
     });
     program.tailwind = Boolean(tailwind);
-    preferences.tailwind = Boolean(tailwind);
   }
 
   if (
     !process.argv.includes("--lint-staged") &&
-    !process.argv.includes("--no-lint-staged")
+    !process.argv.includes("--ls")
   ) {
     const lintStagedStyled = chalk.hex("#007acc")("Lint Staged");
     const { lintstaged } = await prompts({
@@ -292,13 +272,9 @@ async function run(): Promise<void> {
       inactive: "No",
     });
     program.lintstaged = Boolean(lintstaged);
-    preferences.lintstaged = Boolean(lintstaged);
   }
 
-  if (
-    !process.argv.includes("--docker") &&
-    !process.argv.includes("--no-docker")
-  ) {
+  if (!process.argv.includes("--docker") && !process.argv.includes("--d")) {
     const dockerStyled = chalk.hex("#007acc")("Docker");
     const { docker } = await prompts({
       onState: onPromptState,
@@ -310,7 +286,6 @@ async function run(): Promise<void> {
       inactive: "No",
     });
     program.docker = Boolean(docker);
-    preferences.docker = Boolean(docker);
   }
 
   if (
@@ -331,7 +306,6 @@ async function run(): Promise<void> {
           : "Import alias must follow the pattern <prefix>/*",
     });
     program.importAlias = importAlias;
-    preferences.importAlias = importAlias;
   }
 
   try {
@@ -376,7 +350,6 @@ async function run(): Promise<void> {
       lintstaged: program.lintstaged,
     });
   }
-  conf.set("preferences", preferences as unknown as string);
 }
 
 const update = checkForUpdate(packageJson).catch(() => null);
@@ -387,13 +360,15 @@ async function notifyUpdate(): Promise<void> {
     if (res?.latest) {
       const updateMessage =
         packageManager === "yarn"
-          ? "yarn global add create-next-app"
+          ? "yarn global add create-modernfw-app"
           : packageManager === "pnpm"
-          ? "pnpm add -g create-next-app"
-          : "npm i -g create-next-app";
+          ? "pnpm add -g create-modernfw-app"
+          : "npm i -g create-modernfw-app";
 
       console.log(
-        chalk.yellow.bold("A new version of `create-next-app` is available!") +
+        chalk.yellow.bold(
+          "A new version of `create-modernfw-app` is available!",
+        ) +
           "\n" +
           "You can update by running: " +
           chalk.cyan(updateMessage) +
