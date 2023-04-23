@@ -1,5 +1,5 @@
 import { install } from "../helpers/install";
-import { GetTemplateFileArgs, InstallTemplateArgs } from "./types";
+import { InstallTemplateArgs } from "./types";
 
 import { Sema } from "async-sema";
 import chalk from "chalk";
@@ -14,17 +14,6 @@ import util from "util";
 const glob = util.promisify(globOrig);
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
-
-/**
- * Get the file path for a given file in a template, e.g. "next.config.js".
- */
-export const getTemplateFile = ({
-  template,
-  mode,
-  file,
-}: GetTemplateFileArgs): string => {
-  return path.join(__dirname, template, mode, file);
-};
 
 export const installTemplate = async ({
   app,
