@@ -22,8 +22,7 @@ process.on("SIGTERM", handleSigTerm);
 
 const onPromptState = (state: any) => {
   if (state.aborted) {
-    // If we don't re-enable the terminal cursor before exiting
-    // the program, the cursor will remain hidden
+    // The terminal cursor before exiting the program, the cursor will remain hidden
     process.stdout.write("\x1B[?25h");
     process.stdout.write("\n");
     process.exit(1);
@@ -57,7 +56,13 @@ const program = new Commander.Command(packageJson.name)
 
   Initialize as a JavaScript project.
 `,
-  )
+  ).option(
+        "--es, --eslint",
+        `
+
+  Initialize with Eslint config.
+`,
+    )
   .option(
     "--tw, --tailwind",
     `
@@ -80,19 +85,19 @@ Initialize with Docker config. (default)
 `,
   )
   .option(
-    "--es, --eslint",
-    `
-
-  Initialize with Eslint config.
-`,
-  )
-  .option(
     "--ia, --import-alias <alias-to-configure>",
     `
 
   Specify import alias to use (default "@/*").
 `,
   )
+    .option(
+        "--clint, --commitlint",
+        `
+
+  Config enforcing conventional commits.
+`,
+    )
   .allowUnknownOption()
   .parse(process.argv);
 
@@ -119,7 +124,7 @@ async function run(): Promise<void> {
     program.app = app.value;
   }
 
-  if (typeof projectPath === "string") {
+  if (projectPath) {
     projectPath = projectPath.trim();
   }
 
@@ -197,6 +202,7 @@ async function run(): Promise<void> {
     importAlias: "@/*",
     lintstaged: true,
     docker: true,
+    commitlint: false
   };
   const getPrefOrDefault = (field: string) => defaults[field];
 
@@ -286,6 +292,20 @@ async function run(): Promise<void> {
       inactive: "No",
     });
     program.docker = Boolean(docker);
+  }
+
+  if (!process.argv.includes("--commitlint") && !process.argv.includes("--clint")) {
+    const commitLintStyled = chalk.hex("#007acc")("Commit Lint");
+    const { commitlint } = await prompts({
+      onState: onPromptState,
+      type: "toggle",
+      name: "commitlint",
+      message: `Would you like to use ${commitLintStyled} with this project?`,
+      initial: getPrefOrDefault("commitlint"),
+      active: "Yes",
+      inactive: "No",
+    });
+    program.commitlint = Boolean(commitlint);
   }
 
   if (
